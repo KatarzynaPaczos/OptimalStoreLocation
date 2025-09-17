@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 from shapely.geometry import Polygon
 from pathlib import Path
+from src.utils import _latlon_to_xy, clean_iqr
 
 DATA_DIR = Path("data")
 DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -14,6 +15,7 @@ RESIDENTIAL_TYPES = ["house",
                     "bungalow",
                     "apartments",
                     "residential"]
+SQR_METER_PER_PERSON = 25
 
 def city_slug(city: str) -> str:
     return city.lower().replace(" ", "_")
@@ -76,6 +78,27 @@ def load_zabka_data(city: str = "Warszawa") -> pd.DataFrame:
     return df
 
 
+def calculate_area(coords: list):
+    """
+    coords: list of (lon, lat)
+    returns: (area_m2, centroid_lonlat)
+    """
+    if len(coords) < 3:
+        return 0.0, None
+
+    # centroid in lon/lat from the original geometry
+    lonlat_poly = Polygon(coords)
+    centroid = lonlat_poly.centroid  # lon/lat centroid
+
+    # project to planar meters using equirectangular approximation
+    ref_lat = float(np.mean([lat for _, lat in coords]))
+    xy = _latlon_to_xy(coords, ref_lat=ref_lat)
+    proj_poly = Polygon(xy)
+
+    area_m2 = float(proj_poly.area)
+    return area_m2, centroid
+
+
 def load_housing_type(city: str, btype: str) -> pd.DataFrame:
     """
     Fetches buildings of type `btype` (e.g., "house" or "apartments") for a given city.
@@ -113,7 +136,10 @@ def load_housing_type(city: str, btype: str) -> pd.DataFrame:
                 continue
             
             area_m2, centroid = calculate_area(coords)
-            centroid_lon, centroid_lat = centroid.x, centroid.y
+            if centroid is not None:
+                centroid_lon, centroid_lat = centroid.x, centroid.y
+            else:
+                centroid_lon, centroid_lat = None, None
 
             rows.append({
                 "housenumber": tags.get("addr:housenumber"),
@@ -125,23 +151,6 @@ def load_housing_type(city: str, btype: str) -> pd.DataFrame:
                 "building_type": btype,
             })
     return pd.DataFrame(rows)
-
-
-def calculate_area(coords: list): 
-    polygon = Polygon(coords)
-    # Calculate area in square meters (approximate, assuming coords are lon/lat)
-    # Convert degrees to meters using approximate conversion at Warsaw's latitude
-    # 1 degree lat ~ 111 km, 1 degree lon ~ 111 km * cos(latitude)
-    lat_mean = sum([lat for lon, lat in coords]) / len(coords)
-    meter_per_degree_lat = 111000  # meters per degree latitude
-    meter_per_degree_lon = 111000 * abs(np.cos(np.radians(lat_mean)))  # meters per degree longitude
-    
-    projected_coords = [
-        ((lon * meter_per_degree_lon), (lat * meter_per_degree_lat))
-        for lon, lat in coords
-    ]
-    projected_polygon = Polygon(projected_coords)
-    return projected_polygon.area, polygon.centroid
 
 
 def load_housing_data(city: str = "Warszawa") -> pd.DataFrame:
@@ -175,7 +184,22 @@ def load_housing_data(city: str = "Warszawa") -> pd.DataFrame:
     save_dataframe(housing, out_path)
     return housing
 
+
 def load_and_filter_data(city: str = "Warszawa"):
     zabka_locations = load_zabka_data(city)
     housing = load_housing_data(city)
+    housing = number_of_habitants(housing)
+    housing = clean_iqr(housing, cols=["centroid_lat", "centroid_lon"], factor=1.5)
+    print("Number of nans, to correct", housing.residents.isna().sum())
+    print("Number of nans, to correct", housing.levels.isna().sum())
+    print("Number of nans, to correct", housing.area_m2.isna().sum())
+    print("Number of nans, to correct", housing.centroid_lat.isna().sum())
+    print("Number of nans, to correct", zabka_locations.lat.isna().sum())
     return housing, zabka_locations
+
+
+def number_of_habitants(housing: pd.DataFrame) -> pd.DataFrame:
+    housing.loc[:, "residents"] = housing.levels * np.ceil(housing.area_m2 / SQR_METER_PER_PERSON)
+    housing.residents.fillna(3, inplace=True)
+    print("New file needed for the proper data handling - ETL and outliers")
+    return housing

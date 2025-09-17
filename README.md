@@ -9,3 +9,17 @@ Since there are already many stores and many people, the aim is to find places w
 OpenStreetMap (OSM) via Overpass API – to fetch:
 * existing Żabka store locations,
 * residential buildings (e.g., building=house, building=apartments) for simple housing density proxies.
+
+Key steps:
+This project identifies optimal new locations for Żabka stores in Warsaw by analyzing residential density and existing store placements. Using OpenStreetMap data, it extracts housing and store locations, preprocesses and filters the data, and applies Bayesian optimization to suggest the best new store sites. The results are visualized on an interactive map, highlighting residents, current Żabka stores, and proposed new locations.
+
+Key steps:
+
+* Data loading and cleaning from OSM and CSV files
+* Calculation of housing centroids and resident estimates
+* Outlier filtering using IQR
+* Conversion of coordinates for spatial analysis
+* Bayesian optimization to maximize customer proximity and minimize store overlap
+* Visualization of results with folium
+
+![Map Visualization](results/screenshot.png)

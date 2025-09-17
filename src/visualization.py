@@ -33,17 +33,17 @@ def generate_map(housing, zabka_locations, new_locations, city="Warszawa"):
 
     # Add existing Żabka locations
     for _, row in zabka_locations.iterrows():
-        folium.CircleMarker(location=[row['lat'], row['lon']], radius=1,
+        folium.CircleMarker(location=[row['lat'], row['lon']], radius=3,
                             color="green", fill=True, fill_color="green",
                             fill_opacity=0.9, popup="Żabka Location"
                         ).add_to(m)
     # Add new proposed locations
-    for lat, lon, score, rank in new_locations:
+    for lat, lon, cust_prox, store_prox, ratio, score, idx in new_locations:
         folium.Marker(location=[lat, lon],
             icon=folium.Icon(color='red', icon='star', prefix='fa'),
-            popup=f"Proposed Location - Score: {score} - rank {rank}"
+            popup=f"Proposed Location - Score: {score:.2f} ({cust_prox:.2f}, {store_prox:.2f}, {ratio:.2f}) - rank {idx}"
         ).add_to(m)
 
     # Save the map to an HTML file
-    m.save(f"{city}_zabka_map.html")
+    m.save(f"results/{city}_zabka_map.html")
     print(f"Map saved to {city}_zabka_map.html")

@@ -5,18 +5,23 @@ from src.score import evaluate_fn
 from scipy.stats import qmc
 
 class SimpleBayesOpt:
-    def __init__(self, bounds, residents_xy, residents_n, k=1):
+    def __init__(self, bounds, tree_res, tree_store, residents_xy, residents_n, stores_xy, k=1):
         self.bounds = np.array(bounds)
         self.dim = len(bounds) # 2 in total
         self.residents_xy = residents_xy
         self.residents_n = residents_n
+        self.stores_xy = stores_xy
+        self.tree_res=tree_res
+        self.tree_store=tree_store
         self.k = k
         self.X, self.y = [], []
         kernel = Matern(nu=2.5) * ConstantKernel(1.0, (1e-3, 1e3))
         self.gp = GaussianProcessRegressor(kernel=kernel, normalize_y=True)
     
     def add_point(self, x):
-        y = evaluate_fn(x, self.residents_xy, self.residents_n)
+        y = evaluate_fn(x, self.tree_res,
+                        self.tree_store, self.residents_xy,
+                        self.residents_n, self.stores_xy)
         self.X.append(x)
         self.y.append(y)
 
@@ -52,5 +57,5 @@ class SimpleBayesOpt:
     def show_best(self, n=5):
         best_indices = np.argsort(self.y)[-n:][::-1]
         x, y = np.array(self.X), np.array(self.y)
-        return x[best_indices], y[best_indices]
+        return x[best_indices]
     

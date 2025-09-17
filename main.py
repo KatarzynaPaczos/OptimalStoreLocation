@@ -17,8 +17,8 @@ def main():
         n=n_locations, use_grid = True
     )
 
-    for i, (lat, lon, score, _) in enumerate(new_locations, 1):
-        print(f"Location {i}: ({lat}, {lon})  |  Score: {score}")
+    for i, (lat, lon, cust_prox, store_prox, ratio, score, idx) in enumerate(new_locations, 1):
+        print(f"Location {i}: ({lat}, {lon})  |  Score: {cust_prox:.2f}, {store_prox:.2f}, {ratio:.2f}, {score:.2f}")
 
     # Visualize the result
     generate_map(housing, zabka_locations, new_locations)

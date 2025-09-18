@@ -1,6 +1,6 @@
 # Code to visualize the results using folium
 import folium
-from src.utils import _xy_to_latlon
+from data.utils import _xy_to_latlon
 
 def show_candidates(candidates_xy, ref_lat=52.2297, city = "Warsaw"):
     # Center the map around the city
@@ -25,7 +25,7 @@ def generate_map(housing, zabka_locations, new_locations, city="Warszawa"):
 
     # Add housing locations
     for _, row in housing.iterrows():
-        folium.CircleMarker(location=[row['centroid_lat'], row['centroid_lon']],
+        folium.CircleMarker(location=[row['lat'], row['lon']],
                             radius=1, color='blue', fill=True, fill_color='blue',
                             fill_opacity=0.6,
                             popup=f"Type: {row['building_type']}, Area: {row['area_m2']:.1f} m², Residents: {row['residents']}"

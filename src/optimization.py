@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from scipy.stats import qmc
 from src.SimpleBayesOpt import SimpleBayesOpt
-from src.utils import _latlon_to_xy, _xy_to_latlon
+from data.utils import _latlon_to_xy, _xy_to_latlon
 from src.score import evaluate_score
 from sklearn.neighbors import KDTree
 
@@ -16,6 +16,7 @@ def make_sobol_candidates(residents_xy, n_candidates=300, margin_m=MARGIN):
     sample = sampler.random(int(2 ** np.ceil(np.log2(n_candidates))))
     scaled = qmc.scale(sample, [xmin, ymin], [xmax, ymax])
     return scaled
+#expect defould number of zabka stores -> one per 100m2
 
 
 def find_best_location(housing: pd.DataFrame, store_locations: pd.DataFrame, n=5,
@@ -23,8 +24,8 @@ def find_best_location(housing: pd.DataFrame, store_locations: pd.DataFrame, n=5
     """
     Returns DataFrame with the best n picks
     """
-    ref_lat = float(np.mean(housing['centroid_lat'].to_numpy()))
-    residents_xy = _latlon_to_xy(housing[['centroid_lat',  'centroid_lon']].to_numpy(), ref_lat)
+    ref_lat = float(np.mean(housing['lat'].to_numpy()))
+    residents_xy = _latlon_to_xy(housing[['lat',  'lon']].to_numpy(), ref_lat)
     residents_n = housing[['residents']].to_numpy()
     store_locations = store_locations[['lat', 'lon']]
     stores_xy = _latlon_to_xy(store_locations.to_numpy(), ref_lat) # for later

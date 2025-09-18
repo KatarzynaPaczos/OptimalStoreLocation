@@ -34,7 +34,7 @@ def evaluate_score(x, tree_residents, tree_store, residents_xy, residents_n, sto
     cust_prox = customers_proximity(dists_residents, residents_n[idx])
     store_prox = other_store_proximity(dists_stores)
     if len(dists_stores) == 0:
-        ratio = len(residents_n[idx])
+        ratio = len(residents_n[idx])*2
     else:
         ratio = ratio_customers_per_store(residents_n[idx], dists_stores)
     return cust_prox, store_prox, ratio

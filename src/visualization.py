@@ -5,7 +5,7 @@ from data.utils import _xy_to_latlon
 def show_candidates(candidates_xy, ref_lat=52.2297, city = "Warsaw"):
     # Center the map around the city
     candidated_latlon = _xy_to_latlon(candidates_xy, ref_lat=ref_lat)
-    city_center = [52.2297, 21.0122]  # Coordinates for Warsaw
+    city_center = candidates_xy[['lat', 'lon']].mean(axis = 0) # Coordinates for Warsaw
     m = folium.Map(location=city_center, zoom_start=12)
     # Add housing locations
     for row in candidated_latlon:
@@ -20,7 +20,7 @@ def show_candidates(candidates_xy, ref_lat=52.2297, city = "Warsaw"):
 
 def generate_map(housing, zabka_locations, new_locations, city="Warszawa"):
     # Center the map around the city
-    city_center = [52.2297, 21.0122]  # Coordinates for Warsaw
+    city_center = housing[['lat', 'lon']].mean(axis = 0)  # Coordinates for Warsaw
     m = folium.Map(location=city_center, zoom_start=12)
 
     # Add housing locations

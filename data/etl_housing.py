@@ -11,19 +11,19 @@ SQR_METER_PER_PERSON = 25
 DEFAULT_AREA = 25
 DEFAULT_LEVELS = 2
 
-def run_etl_housing(city:str):
-    bronze_housing(city)
+def run_etl_housing(city:str, country: str):
+    bronze_housing(city, country)
     silver_housing(city)
     golden_housing(city)
 
 
-def bronze_housing(city:str):
+def bronze_housing(city:str, country: str):
     print("Collecting the data ...")
     dfs = []
     for idx, btype in enumerate(RESIDENTIAL_TYPES):
         print(f'Collecting houing type {btype} - {idx+1}/{len(RESIDENTIAL_TYPES)})')
         try:
-            df_part = load_housing_type(city, btype)
+            df_part = load_housing_type(city, btype, country)
             if not df_part.empty:
                 dfs.append(df_part)
         except Exception as e:
@@ -45,14 +45,15 @@ def bronze_housing(city:str):
     housing.to_parquet(out_path, index=False)
 
 
-def load_housing_type(city: str, btype: str) -> pd.DataFrame:
+def load_housing_type(city: str, btype: str, country: str) -> pd.DataFrame:
     """
     Fetches buildings of type `btype` (e.g., "house" or "apartments") for a given city.
     Returns the centroid, approximate area in square meters, and related attributes.
     """
     query = f"""
-    [out:json][timeout:240];
-    area["name"="{city}"]->.searchArea;
+    [out:json][timeout:300];
+    area["name"="{country}"]["boundary"="administrative"]->.country;
+    area["name"="{city}"]["boundary"="administrative"]->.searchArea;
     (
       way["building"="{btype}"](area.searchArea);
     );

@@ -3,19 +3,19 @@ import pandas as pd
 from pathlib import Path
 from data.utils import clean_iqr
 
-def run_etl_stores(city:str):
-    bronze_stores(city)
+def run_etl_stores(city:str, country: str, store: str):
+    bronze_stores(city, country, store)
     silver_stores(city)
     golden_stores(city)
 
 
-def bronze_stores(city:str):
+def bronze_stores(city:str, country: str, store: str):
     print("Collecting the stores localisation data ...")
     query = f"""
     [out:json][timeout:60];
-    area["name"="Polska"]["boundary"="administrative"]->.country;
+    area["name"="{country}"]["boundary"="administrative"]->.country;
     area["name"="{city}"]["boundary"="administrative"]->.searchArea;
-    nwr["shop"="convenience"]["brand"~"Żabka",i](area.searchArea);
+    nwr["shop"="convenience"]["brand"~"{store}",i](area.searchArea);
     out center;
     """
     resp = requests.get("https://overpass-api.de/api/interpreter", params={'data': query})

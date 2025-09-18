@@ -40,20 +40,17 @@ This project uses open data and bayes optimisation to recommend optimal new loca
 
 ## 🛠️ How It Works
 
-1. **ETL Pipeline:**  
-   - **Bronze:** Raw data ingestion from OSM  
-   - **Silver:** Data cleaning, outlier removal, feature engineering  
-   - **Gold:** Final aggregation and enrichment
+- **ETL Pipeline:**  
+  Raw data is ingested from OpenStreetMap (Bronze), cleaned and filtered with outlier removal and feature engineering (Silver), then aggregated and enriched for analysis (Gold).
 
-2. **Spatial Analysis:**  
-   - Convert latitude/longitude to metric coordinates  
-   - Estimate residents per building
+- **Spatial Analysis:**  
+  Latitude and longitude coordinates are converted to metric space, and residents per building are estimated to understand population distribution.
 
-3. **Optimization:**  
-   - Use Bayesian optimization to find locations maximizing customer proximity and minimizing competition
+- **Optimization:**  
+  Bayesian optimization is applied to identify new store locations that maximize customer proximity while minimizing competition with existing stores.
 
-4. **Visualization:**  
-   - Generate interactive maps showing housing, existing stores, and recommended new locations
+- **Visualization:**  
+  Results are presented on interactive maps, displaying residential buildings, current Żabka stores, and recommended new locations.
 
 ---
 

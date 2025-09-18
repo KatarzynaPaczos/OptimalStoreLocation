@@ -17,6 +17,20 @@ This project uses open data and bayes optimisation to recommend optimal new loca
 
 ---
 
+## 🌟 Example Result
+
+![Map Visualization](results/screenshot.png)
+
+---
+
+## 💡 Why Is This Cool?
+
+- **Real-world impact:** Helps optimize retail expansion using open data and AI
+- **Scalable pipeline:** Ready for any city or store chain
+- **Modern stack:** ETL layers, spatial analytics, Bayesian optimization, interactive maps
+
+---
+
 ## 📊 Data Sources
 
 - **OpenStreetMap (OSM):** Store locations, residential buildings
@@ -49,20 +63,6 @@ This project uses open data and bayes optimisation to recommend optimal new loca
 python main.py
 ```
 - Outputs recommended new store locations and saves an interactive map in `results/`.
-
----
-
-## 🌟 Example Result
-
-![Map Visualization](results/screenshot.png)
-
----
-
-## 💡 Why Is This Cool?
-
-- **Real-world impact:** Helps optimize retail expansion using open data and AI
-- **Scalable pipeline:** Ready for any city or store chain
-- **Modern stack:** ETL layers, spatial analytics, Bayesian optimization, interactive maps
 
 ---
 

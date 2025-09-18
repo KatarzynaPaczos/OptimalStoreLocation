@@ -1,8 +1,8 @@
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import Matern, ConstantKernel
 import numpy as np
+from src.utils import Sobol
 from src.score import evaluate_fn
-from scipy.stats import qmc
 
 class SimpleBayesOpt:
     def __init__(self, bounds, tree_res, tree_store, residents_xy, residents_n, stores_xy, k=1):
@@ -40,10 +40,8 @@ class SimpleBayesOpt:
     
     def suggest(self, n_best, n_candidates=65536):
         # sample Sobol candidates
-        sobol = qmc.Sobol(d=self.dim, scramble=True)
-        Xcand = sobol.random(int(2 ** np.ceil(np.log2(n_candidates))))
+        Xcand = Sobol(n_candidates, bound_x=self.bounds[:,0], bound_y=self.bounds[:,1])
         print(f"suggested 50 out of {int(2 ** np.ceil(np.log2(n_candidates)))} points")
-        Xcand = qmc.scale(Xcand, self.bounds[:,0], self.bounds[:,1])
         return self.suggest_next(Xcand, n_best)
     
     def run(self, first_data, n_iter=3):

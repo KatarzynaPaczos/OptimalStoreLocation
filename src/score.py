@@ -1,8 +1,8 @@
 import numpy as np
 
 W_CUSTOM = 1.0
-W_STORE  = 1.5
-W_RATIO = 0.1
+W_STORE  = 5
+W_RATIO = 1
 MAX_RADIUS = 1000.0   # cutoff in meters
 
 

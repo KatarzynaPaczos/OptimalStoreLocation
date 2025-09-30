@@ -15,7 +15,7 @@ def show_candidates(candidates_xy, ref_lat=52.2297, city = "Warsaw"):
                             #popup=f"Type: {row['building_type']}, Area: {row['area_m2']:.1f} m², Residents: {row['residents']}"
                         ).add_to(m)
     m.save(f"{city}_candidated.html")
-    print(f"Map saved to candid.html")
+    print("Map saved to candid.html")
 
 
 def generate_map(housing, zabka_locations, new_locations, city="Warszawa"):

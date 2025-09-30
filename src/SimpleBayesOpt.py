@@ -7,7 +7,6 @@ from src.score import evaluate_fn
 class SimpleBayesOpt:
     def __init__(self, bounds, tree_res, tree_store, residents_xy, residents_n, stores_xy, k=1):
         self.bounds = np.array(bounds)
-        self.dim = len(bounds) # 2 in total
         self.residents_xy = residents_xy
         self.residents_n = residents_n
         self.stores_xy = stores_xy
@@ -54,6 +53,6 @@ class SimpleBayesOpt:
     
     def show_best(self, n=5):
         best_indices = np.argsort(self.y)[-n:][::-1]
-        x, y = np.array(self.X), np.array(self.y)
+        x, _ = np.array(self.X), np.array(self.y)
         return x[best_indices]
     

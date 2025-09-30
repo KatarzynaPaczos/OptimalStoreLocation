@@ -5,3 +5,5 @@ scikit-optimize
 folium
 requests
 shapely
+vulture
+ruff

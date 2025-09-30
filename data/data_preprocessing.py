@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 from pathlib import Path
 from data.etl_housing import run_etl_housing
 from data.etl_stores import run_etl_stores

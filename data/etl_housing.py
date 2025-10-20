@@ -1,15 +1,21 @@
+import logging
 import pandas as pd
 import numpy as np
 import requests
 from pathlib import Path
 import time
 from data.utils import clean_iqr, calculate_area
+from requests.exceptions import RequestException
+logger = logging.getLogger(__name__)
 
 RESIDENTIAL_TYPES = ["house","detached", "semidetached_house",
                     "terrace", "bungalow", "apartments", "residential"]
 SQR_METER_PER_PERSON = 25
 DEFAULT_AREA = 25
 DEFAULT_LEVELS = 2
+
+MAX_RETRIES = 3
+RETRY_DELAY = 5
 
 def run_etl_housing(city:str, country: str):
     bronze_housing(city, country)
@@ -18,31 +24,47 @@ def run_etl_housing(city:str, country: str):
 
 
 def bronze_housing(city:str, country: str):
-    print("Collecting the data ...")
     dfs = []
-    for idx, btype in enumerate(RESIDENTIAL_TYPES):
-        print(f'Collecting houing type {btype} - {idx+1}/{len(RESIDENTIAL_TYPES)})')
-        try:
-            df_part = load_housing_type(city, btype, country)
-            if not df_part.empty:
-                dfs.append(df_part)
-        except Exception as e:
-            print(f"[warn] failed for building={btype}: {e}")
-        time.sleep(10)
+    for idx, btype in enumerate(RESIDENTIAL_TYPES, start=1):
+        logger.info(f'Collecting housing type {btype} - {idx}/{len(RESIDENTIAL_TYPES)})')
+        # Retry logic
+        attempt = 1
+        success = False
+        while attempt <= MAX_RETRIES and not success:
+            try:
+                df_part = load_housing_type(city, btype, country)
+                if df_part is not None and not df_part.empty:
+                    dfs.append(df_part)
+                    logger.info(f"Successfully fetched data for '{btype}' ({len(df_part)} rows)")
+                else:
+                    logger.warning(f"No data returned for '{btype}'")
+                success = True
+
+            except RequestException as e:
+                logger.warning(f"Network error for '{btype}' (attempt {attempt}/{MAX_RETRIES}): {e}")
+                attempt += 1
+                if attempt <= MAX_RETRIES:
+                    time.sleep(RETRY_DELAY)
+            except Exception as e:
+                logger.error(f"Failed to process '{btype}': {e}", exc_info=True)
+                break  # no retry for logical errors
+        time.sleep(2)
 
     if dfs:
-        housing = pd.concat(dfs, axis=0, ignore_index=True)
-        housing.drop_duplicates(
-            subset=["lon", "lat", "building_type"],
-            inplace=True
+        housing = pd.concat(dfs, axis=0, ignore_index=True).drop_duplicates(
+            subset=["lon", "lat", "building_type"]
         )
+        logger.info(f"Collected {len(housing)} total rows across {len(dfs)} building types.")
     else:
+        logger.warning("No data collected for any building type.")
         housing = pd.DataFrame(columns=[
-            "housenumber","street","levels","area_m2",
-            "lon","lat","building_type"
+            "housenumber", "street", "levels", "area_m2",
+            "lon", "lat", "building_type"
         ])
     out_path = Path("data/bronze") / f"{city.lower().replace(' ', '_')}_housing.parquet"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
     housing.to_parquet(out_path, index=False)
+    logger.info(f"Saved housing data to {out_path}")
 
 
 def load_housing_type(city: str, btype: str, country: str) -> pd.DataFrame:
@@ -101,7 +123,7 @@ def load_housing_type(city: str, btype: str, country: str) -> pd.DataFrame:
 
 def number_of_residents(housing: pd.DataFrame) -> pd.DataFrame:
     housing.loc[:, "residents"] = housing.levels * np.ceil(housing.area_m2 / SQR_METER_PER_PERSON)
-    housing.residents.fillna(3, inplace=True)
+    housing.loc[:, "residents"] = housing["residents"].fillna(3)
     return housing
 
 

@@ -55,9 +55,9 @@ This project uses open data and bayes optimisation to recommend optimal new loca
 ---
 
 ## 🧑‍💻 Usage
-
+This guide is for Linux users — adjust the instructions if you’re on another OS.
 ```bash
-source ./venv/Scripts/activate
+source .venv/bin/activate
 python3 main.py
 ```
 - Outputs recommended new store locations and saves an interactive map in `results/`.

@@ -1,5 +1,8 @@
 import numpy as np
+import logging
 from shapely.geometry import Polygon
+
+logger = logging.getLogger(__name__)
 EARTH_RADIUS = 6371000 #in (m)
 
 def iqr_bounds(series, factor = 3):
@@ -19,7 +22,7 @@ def clean_iqr(df, cols=["lat", "lon"], factor=3):
 
     cleaned = df.loc[mask].reset_index(drop=True)
     removed = len(df) - len(cleaned)
-    print(f"Removed {removed} outliers out of {len(df)} rows "
+    logger.info(f"Removed {removed} outliers out of {len(df)} rows "
           f"({removed/len(df)*100:.2f}%).")
     return cleaned
 

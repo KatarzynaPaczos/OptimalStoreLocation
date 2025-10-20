@@ -1,6 +1,17 @@
+import logging
 from data.data_preprocessing import load_and_filter_data
 from src.optimization import find_best_location
 from src.visualization import generate_map
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    #handlers=[
+    #    logging.FileHandler("etl.log"), #logi zapisuja się na ekranie
+    #    logging.StreamHandler()
+    #]
+)
+logger = logging.getLogger(__name__)
 
 def main():
     # how many new locations to create
@@ -8,7 +19,7 @@ def main():
     city = "Warszawa"
     country = "Poland"
     store = "Żabka"
-    print(f"I will look for {n_locations} new locations of {store} store in {city} city({country}).")
+    logger.info("Searching for %d new %s store locations in %s, %s.", n_locations, store, city, country)
     
     housing, zabka_locations = load_and_filter_data(city, country, store)
     new_locations = find_best_location(
@@ -18,7 +29,7 @@ def main():
     )
 
     for i, (lat, lon, cust_prox, store_prox, ratio, score, _) in enumerate(new_locations, 1):
-        print(f"Location {i}: ({lat}, {lon})  |  Score: {cust_prox:.2f}, {store_prox:.2f}, {ratio:.2f}, {score:.2f}")
+        logger.info(f"Location {i}: ({lat:.5f}, {lon:.5f}) | Score: {cust_prox:.2f}, {store_prox:.2f}, {ratio:.2f}, {score:.2f}")
     generate_map(housing, zabka_locations, new_locations)
 
 

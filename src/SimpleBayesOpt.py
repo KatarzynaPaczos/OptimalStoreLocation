@@ -28,7 +28,7 @@ class SimpleBayesOpt:
         for x in X:
             self.add_point(x)
         self.gp.fit(np.array(self.X), np.array(self.y))
-        print("GP fitted on", len(self.X), "points")
+        #print("GP fitted on", len(self.X), "points")
 
     def suggest_next(self, X_cand, n_best):
         """Predict UCB for candidates and return the best"""
@@ -40,7 +40,7 @@ class SimpleBayesOpt:
     def suggest(self, n_best, n_candidates=65536):
         # sample Sobol candidates
         Xcand = Sobol(n_candidates, bound_x=self.bounds[:,0], bound_y=self.bounds[:,1])
-        print(f"suggested 50 out of {int(2 ** np.ceil(np.log2(n_candidates)))} points")
+        #print(f"suggested 50 out of {int(2 ** np.ceil(np.log2(n_candidates)))} points")
         return self.suggest_next(Xcand, n_best)
     
     def run(self, first_data, n_iter=3):

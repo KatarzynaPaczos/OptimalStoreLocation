@@ -7,3 +7,4 @@ requests
 shapely
 vulture
 ruff
+fastparquet

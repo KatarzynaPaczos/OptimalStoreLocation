@@ -6,3 +6,4 @@ data/__pycache__/*
 results/Warszawa_zabka_map.html
 src/__pycache__/*
 .venv/
+.env

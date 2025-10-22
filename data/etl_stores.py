@@ -3,6 +3,7 @@ import requests
 import pandas as pd
 from pathlib import Path
 from data.utils import clean_iqr
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -13,33 +14,9 @@ def run_etl_stores(city:str, country: str, store: str):
 
 
 def bronze_stores(city:str, country: str, store: str):
-    query = f"""
-    [out:json][timeout:60];
-    area["name"="{country}"]["boundary"="administrative"]->.country;
-    area["name"="{city}"]["boundary"="administrative"]->.searchArea;
-    nwr["shop"="convenience"]["brand"~"{store}",i](area.searchArea);
-    out center;
-    """
-    resp = requests.get("https://overpass-api.de/api/interpreter", params={'data': query})
-    resp.raise_for_status()
-    logger.info("Connection to overpass-api - response status code: %d", resp.status_code)
-    data = resp.json()
-    rows = []
-    for el in data.get("elements", []):
-        tags = el.get("tags", {})
-        # some 'way/rel' dont have lat/lon, byt has center.{lat,lon}
-        lat = el.get("lat") or (el.get("center") or {}).get("lat")
-        lon = el.get("lon") or (el.get("center") or {}).get("lon")
-        rows.append({
-            "name": tags.get("name"),
-            "lat": lat,
-            "lon": lon,
-            "housenumber": tags.get("addr:housenumber"),
-            "street": tags.get("addr:street"),
-        })
     out_path = Path("data/bronze") / f"{city.lower().replace(' ', '_')}_store_locations.parquet"
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    df = pd.DataFrame(rows)
+    df = fetch_stores_data(city, country, store)
     df.to_parquet(out_path, index=False)
 
 
@@ -60,4 +37,42 @@ def golden_stores(city):
     out_path = Path("data/golden")/f"{city.lower().replace(' ', '_')}_store_locations.parquet"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     df.to_parquet(out_path, index=False)
-    
+
+
+def fetch_stores_data(city:str, country: str, store: str):
+    query = f"""
+    [out:json][timeout:60];
+    area["name"="{country}"]["boundary"="administrative"]->.country;
+    area["name"="{city}"]["boundary"="administrative"]->.searchArea;
+    nwr["shop"="convenience"]["brand"~"{store}",i](area.searchArea);
+    out center;
+    """
+    for attempt in range(1, 3):
+        try:
+            resp = requests.get("https://overpass-api.de/api/interpreter", params={'data': query}, timeout=120)
+            resp.raise_for_status()
+            logger.info("Connection to overpass-api - response status code: %d", resp.status_code)
+        
+        
+            data = resp.json()
+            rows = []
+            for el in data.get("elements", []):
+                tags = el.get("tags", {})
+                # some 'way/rel' dont have lat/lon, byt has center.{lat,lon}
+                lat = el.get("lat") or (el.get("center") or {}).get("lat")
+                lon = el.get("lon") or (el.get("center") or {}).get("lon")
+                rows.append({
+                    "name": tags.get("name"),
+                    "lat": lat,
+                    "lon": lon,
+                    "housenumber": tags.get("addr:housenumber"),
+                    "street": tags.get("addr:street"),
+                })
+            return pd.DataFrame(rows)
+        except requests.exceptions.RequestException as e:
+                logger.warning(f"Overpass attempt {attempt} failed: {e}")
+                if attempt < 3:
+                    time.sleep(10)
+                else:
+                    logger.error("Overpass API failed after 3 attempts.")
+                    raise SystemExit

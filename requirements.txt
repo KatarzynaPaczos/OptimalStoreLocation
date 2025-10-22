@@ -8,3 +8,7 @@ shapely
 vulture
 ruff
 fastparquet
+
+snowflake-connector-python[pandas]
+snowflake-sqlalchemy
+python-dotenv

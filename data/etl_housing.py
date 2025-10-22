@@ -24,43 +24,7 @@ def run_etl_housing(city:str, country: str):
 
 
 def bronze_housing(city:str, country: str):
-    dfs = []
-    for idx, btype in enumerate(RESIDENTIAL_TYPES, start=1):
-        logger.info(f'Collecting housing type {btype} - {idx}/{len(RESIDENTIAL_TYPES)})')
-        # Retry logic
-        attempt = 1
-        success = False
-        while attempt <= MAX_RETRIES and not success:
-            try:
-                df_part = load_housing_type(city, btype, country)
-                if df_part is not None and not df_part.empty:
-                    dfs.append(df_part)
-                    logger.info(f"Successfully fetched data for '{btype}' ({len(df_part)} rows)")
-                else:
-                    logger.warning(f"No data returned for '{btype}'")
-                success = True
-
-            except RequestException as e:
-                logger.warning(f"Network error for '{btype}' (attempt {attempt}/{MAX_RETRIES}): {e}")
-                attempt += 1
-                if attempt <= MAX_RETRIES:
-                    time.sleep(RETRY_DELAY)
-            except Exception as e:
-                logger.error(f"Failed to process '{btype}': {e}", exc_info=True)
-                break  # no retry for logical errors
-        time.sleep(2)
-
-    if dfs:
-        housing = pd.concat(dfs, axis=0, ignore_index=True).drop_duplicates(
-            subset=["lon", "lat", "building_type"]
-        )
-        logger.info(f"Collected {len(housing)} total rows across {len(dfs)} building types.")
-    else:
-        logger.warning("No data collected for any building type.")
-        housing = pd.DataFrame(columns=[
-            "housenumber", "street", "levels", "area_m2",
-            "lon", "lat", "building_type"
-        ])
+    housing = fetch_housing_data(city, country)
     out_path = Path("data/bronze") / f"{city.lower().replace(' ', '_')}_housing.parquet"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     housing.to_parquet(out_path, index=False)
@@ -119,6 +83,47 @@ def load_housing_type(city: str, btype: str, country: str) -> pd.DataFrame:
                 "building_type": btype,
             })
     return pd.DataFrame(rows)
+
+
+def fetch_housing_data(city:str, country: str) -> pd.DataFrame:
+    dfs = []
+    for idx, btype in enumerate(RESIDENTIAL_TYPES, start=1):
+        logger.info(f'Collecting housing type {btype} - {idx}/{len(RESIDENTIAL_TYPES)})')
+        # Retry logic
+        attempt = 1
+        success = False
+        while attempt <= MAX_RETRIES and not success:
+            try:
+                df_part = load_housing_type(city, btype, country)
+                if df_part is not None and not df_part.empty:
+                    dfs.append(df_part)
+                    logger.info(f"Successfully fetched data for '{btype}' ({len(df_part)} rows)")
+                else:
+                    logger.warning(f"No data returned for '{btype}'")
+                success = True
+
+            except RequestException as e:
+                logger.warning(f"Network error for '{btype}' (attempt {attempt}/{MAX_RETRIES}): {e}")
+                attempt += 1
+                if attempt <= MAX_RETRIES:
+                    time.sleep(RETRY_DELAY)
+            except Exception as e:
+                logger.error(f"Failed to process '{btype}': {e}", exc_info=True)
+                break  # no retry for logical errors
+        time.sleep(2)
+
+    if dfs:
+        housing = pd.concat(dfs, axis=0, ignore_index=True).drop_duplicates(
+            subset=["lon", "lat", "building_type"]
+        )
+        logger.info(f"Collected {len(housing)} total rows across {len(dfs)} building types.")
+    else:
+        logger.warning("No data collected for any building type.")
+        housing = pd.DataFrame(columns=[
+            "housenumber", "street", "levels", "area_m2",
+            "lon", "lat", "building_type"
+        ])
+    return housing
 
 
 def number_of_residents(housing: pd.DataFrame) -> pd.DataFrame:

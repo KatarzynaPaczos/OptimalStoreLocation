@@ -1,8 +1,7 @@
 import logging
 import pandas as pd
 from pathlib import Path
-from data.etl_housing import run_etl_housing
-from data.etl_stores import run_etl_stores
+from data.local_etl import run_etl_housing, run_etl_stores
 from data.snowflake_functions import (
     get_connection_snowflake,
     read_table,

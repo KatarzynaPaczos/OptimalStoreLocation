@@ -20,7 +20,7 @@ def main():
     country = "Poland"
     store = "Żabka"
     logger.info("Searching for %d new %s store locations in %s, %s.", n_locations, store, city, country)
-    
+
     housing, zabka_locations = load_and_filter_data(city, country, store)
     new_locations = find_best_location(
         housing=housing,
@@ -29,7 +29,8 @@ def main():
     )
 
     for i, (lat, lon, cust_prox, store_prox, ratio, score, _) in enumerate(new_locations, 1):
-        logger.info(f"Location {i}: ({lat:.5f}, {lon:.5f}) | Score: {cust_prox:.2f}, {store_prox:.2f}, {ratio:.2f}, {score:.2f}")
+        logger.info(f"Location {i}: ({lat:.5f}, {lon:.5f}) | Score: {cust_prox:.2f},",
+                    f"{store_prox:.2f}, {ratio:.2f}, {score:.2f}")
     generate_map(housing, zabka_locations, new_locations)
 
 

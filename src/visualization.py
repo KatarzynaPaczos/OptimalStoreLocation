@@ -15,7 +15,6 @@ def show_candidates(candidates_xy, ref_lat=52.2297, city = "Warsaw"):
         folium.CircleMarker(location=row,
                             radius=1, color='blue', fill=True, fill_color='blue',
                             fill_opacity=0.6,
-                            #popup=f"Type: {row['building_type']}, Area: {row['area_m2']:.1f} m², Residents: {row['residents']}"
                         ).add_to(m)
     m.save(f"{city}_candidated.html")
     logger.info("Map saved to candid.html")
@@ -28,10 +27,15 @@ def generate_map(housing, zabka_locations, new_locations, city="Warszawa"):
 
     # Add housing locations
     for _, row in housing.iterrows():
+        popup_text = (
+            f"Type: {row['building_type']}, "
+            f"Area: {row['area_m2']:.1f} m², "
+            f"Residents: {row['residents']}"
+        )
         folium.CircleMarker(location=[row['lat'], row['lon']],
                             radius=1, color='blue', fill=True, fill_color='blue',
                             fill_opacity=0.6,
-                            popup=f"Type: {row['building_type']}, Area: {row['area_m2']:.1f} m², Residents: {row['residents']}"
+                            popup=popup_text
                         ).add_to(m)
 
     # Add existing Żabka locations
@@ -42,9 +46,13 @@ def generate_map(housing, zabka_locations, new_locations, city="Warszawa"):
                         ).add_to(m)
     # Add new proposed locations
     for lat, lon, cust_prox, store_prox, ratio, score, idx in new_locations:
+        popup_text = (
+            f"Proposed Location - Score: {score:.2f} "
+            f"({cust_prox:.2f}, {store_prox:.2f}, {ratio:.2f}) - rank {idx}"
+        )
         folium.Marker(location=[lat, lon],
             icon=folium.Icon(color='red', icon='star', prefix='fa'),
-            popup=f"Proposed Location - Score: {score:.2f} ({cust_prox:.2f}, {store_prox:.2f}, {ratio:.2f}) - rank {idx}"
+            popup=popup_text
         ).add_to(m)
 
     # Save the map to an HTML file

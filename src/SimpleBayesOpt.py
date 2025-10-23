@@ -16,7 +16,7 @@ class SimpleBayesOpt:
         self.X, self.y = [], []
         kernel = Matern(nu=2.5) * ConstantKernel(1.0, (1e-3, 1e3))
         self.gp = GaussianProcessRegressor(kernel=kernel, normalize_y=True)
-    
+
     def add_point(self, x):
         y = evaluate_fn(x, self.tree_res,
                         self.tree_store, self.residents_xy,
@@ -36,13 +36,13 @@ class SimpleBayesOpt:
         ucb = mu.ravel() + self.k * sigma
         top_idx = np.argsort(ucb)[-n_best:][::-1]  # indices of top n UCB values
         return X_cand[top_idx]
-    
+
     def suggest(self, n_best, n_candidates=65536):
         # sample Sobol candidates
         Xcand = Sobol(n_candidates, bound_x=self.bounds[:,0], bound_y=self.bounds[:,1])
         #print(f"suggested 50 out of {int(2 ** np.ceil(np.log2(n_candidates)))} points")
         return self.suggest_next(Xcand, n_best)
-    
+
     def run(self, first_data, n_iter=3):
         for i in range(n_iter):
             if i == 0:
@@ -50,9 +50,8 @@ class SimpleBayesOpt:
             else:
                 best_loc = self.suggest(n_best = 50)
                 self.fit(best_loc)
-    
+
     def show_best(self, n=5):
         best_indices = np.argsort(self.y)[-n:][::-1]
         x, _ = np.array(self.X), np.array(self.y)
         return x[best_indices]
-    

@@ -1,8 +1,4 @@
 #!/usr/bin/env bash
-vulture src/
-vulture main.py
-vulture data/
-ruff check src/
-ruff check data/
+vulture src/ main.py data/
 ruff check . --fix
-ruff check .
+ruff check . --select E,W,F --line-length 120 --fix

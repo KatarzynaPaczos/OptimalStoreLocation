@@ -1,6 +1,3 @@
-# chcecks snowflake connection 
-#contains read_table(), write_table() functions
-
 import os
 import pandas as pd
 import logging
@@ -8,8 +5,9 @@ import snowflake.connector
 from typing import Optional
 from dotenv import load_dotenv
 from snowflake.connector.pandas_tools import write_pandas
-from data.etl_stores import fetch_stores_data
-from data.etl_housing import fetch_housing_data
+from data.utils import fetch_stores_data, fetch_housing_data
+from data.utils import DEFAULT_LEVELS, DEFAULT_AREA
+
 load_dotenv()
 logger = logging.getLogger(__name__)
 
@@ -23,7 +21,7 @@ def get_connection_snowflake():
             account=os.getenv("SNOWFLAKE_ACCOUNT")
         )
         logger.info(f"Sucessfully connected to Snowflake as user {os.getenv('SNOWFLAKE_USER')}")
-        
+
         warehouse = os.getenv("SNOWFLAKE_WAREHOUSE")
         database = os.getenv("SNOWFLAKE_DATABASE")
         cur = conn.cursor()
@@ -70,6 +68,22 @@ def ensure_schema_exists(conn, schema: str):
     cur.close()
 
 
+def run_etl_snowflake_stores(conn, city: str, country: str, store: str, schema: str):
+    stores = fetch_stores_data(city, country, store)
+    upload_to_snowflake(conn, stores, schema, "L1_RAW")
+    transform_stores_silver(conn, schema, "L1_RAW", "L2_CLEANED")
+    transform_stores_golden(conn, schema, "L2_CLEANED", "L3_GOLDEN")
+    return read_table(conn, schema, "L3_GOLDEN")
+
+
+def run_etl_snowflake_housing(conn, city: str, country: str, schema: str):
+    housing = fetch_housing_data(city, country)
+    upload_to_snowflake(conn, housing, schema, "L1_RAW")
+    transform_housing_silver(conn, schema, "L1_RAW", "L2_CLEANED")
+    transform_housing_golden(conn, schema, "L2_CLEANED", "L3_GOLDEN")
+    return read_table(conn, schema, "L3_GOLDEN")
+
+
 def upload_to_snowflake(conn, df: pd.DataFrame, schema: str, table: str):
     ensure_schema_exists(conn, schema)
     success, _, nrows, _ = write_pandas(
@@ -98,15 +112,11 @@ def transform_stores_silver(conn, schema: str, table_old: str, table_new: str):
 def transform_stores_golden(conn, schema: str, table_old: str, table_new: str):
     cur = conn.cursor()
     logger.info("Transforming L2_CLEANED → L3_GOLDEN")
-    
+
     cur.execute(f"""
         CREATE OR REPLACE TABLE {schema}.{table_new} CLONE {schema}.{table_old};
     """)
     cur.close()
-
-    
-DEFAULT_AREA = 50       # przykładowa średnia powierzchnia m²
-DEFAULT_LEVELS = 3
 
 
 def transform_housing_silver(conn, schema: str, table_old: str, table_new: str):
@@ -157,20 +167,3 @@ def transform_housing_golden(conn, schema: str, table_old: str, table_new: str):
     cur.execute(query)
     cur.close()
     logger.info(f"Created {schema}.{table_new}")
-
-
-def run_etl_snowflake_stores(conn, city: str, country: str, store: str, schema: str):
-    stores = fetch_stores_data(city, country, store)
-    upload_to_snowflake(conn, stores, schema, "L1_RAW")
-    transform_stores_silver(conn, schema, "L1_RAW", "L2_CLEANED")
-    transform_stores_golden(conn, schema, "L2_CLEANED", "L3_GOLDEN")
-    return read_table(conn, schema, "L3_GOLDEN")
-
-
-def run_etl_snowflake_housing(conn, city: str, country: str, schema: str):
-    housing = fetch_housing_data(city, country)
-    upload_to_snowflake(conn, housing, schema, "L1_RAW")
-    transform_housing_silver(conn, schema, "L1_RAW", "L2_CLEANED")
-    transform_housing_golden(conn, schema, "L2_CLEANED", "L3_GOLDEN")
-    return read_table(conn, schema, "L3_GOLDEN")
-

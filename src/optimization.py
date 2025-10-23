@@ -16,8 +16,7 @@ def make_sobol_candidates(residents_xy, n_candidates = 600, margin_m=MARGIN):
 
 def find_best_location(housing: pd.DataFrame, store_locations: pd.DataFrame, n=5,
                        use_grid=True):
-    """
-    Returns DataFrame with the best n picks
+    """Returns DataFrame with the best n picks
     """
     ref_lat = float(np.mean(housing['lat'].to_numpy()))
     residents_xy = _latlon_to_xy(housing[['lat',  'lon']].to_numpy(), ref_lat)
@@ -69,7 +68,13 @@ def random_search_local(new_locations_xy, distance, tree_residents, tree_store, 
         bound_x = [lat_xy - distance, lon_xy - distance]
         bound_y = [lat_xy + distance, lon_xy + distance]
         sobol_points = Sobol(600, bound_x, bound_y)
-        scores = [evaluate_fn(p, tree_residents, tree_store, residents_xy, residents_n, stores_xy) for p in sobol_points]
+        scores = [evaluate_fn(p,
+                              tree_residents,
+                              tree_store,
+                              residents_xy,
+                              residents_n,
+                              stores_xy)
+                              for p in sobol_points]
         best_local_point = sobol_points[np.argmax(scores)]
         best_search.append(best_local_point)
     return best_search

@@ -25,10 +25,11 @@ def evaluate_fn(x, tree_residents, tree_store, residents_xy, residents_n, stores
 
 def evaluate_score(x, tree_residents, tree_store, residents_xy, residents_n, stores_xy):
     # x is the candidate for the new store. Let's calulate how good is this localisation
-    idx = tree_residents.query_radius(x.reshape(1, -1), r=MAX_RADIUS)[0] # indexes of all residents in the max_radious around x
+    # indexes of all residents in the max_radious around x
+    idx = tree_residents.query_radius(x.reshape(1, -1), r=MAX_RADIUS)[0]
     dists_residents = np.linalg.norm(residents_xy[idx] - x, axis=1) # distances - vector with
 
-    idx = tree_store.query_radius(x.reshape(1, -1), r=MAX_RADIUS)[0] # indexes of all residents in the max_radious around x
+    idx = tree_store.query_radius(x.reshape(1, -1), r=MAX_RADIUS)[0]
     dists_stores = np.linalg.norm(stores_xy[idx] - x, axis=1) # distances - vector with
 
     cust_prox = customers_proximity(dists_residents, residents_n[idx])

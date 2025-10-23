@@ -3,7 +3,12 @@ import pandas as pd
 from pathlib import Path
 from data.etl_housing import run_etl_housing
 from data.etl_stores import run_etl_stores
-from data.snowflake_functions import get_connection_snowflake, read_table, run_etl_snowflake_stores, run_etl_snowflake_housing
+from data.snowflake_functions import (
+    get_connection_snowflake,
+    read_table,
+    run_etl_snowflake_stores,
+    run_etl_snowflake_housing,
+)
 DATA_DIR = Path("data")
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 logger = logging.getLogger(__name__)
@@ -59,7 +64,7 @@ def load_snowflake_housing(conn, city: str, country: str):
         return golden
     else:
         run_etl_snowflake_housing(conn, city, country, schema)
-    
+
 
 def load_and_filter_data(city: str = "Warszawa", country: str = "Polska", store = "Żabka"):
     conn = get_connection_snowflake()

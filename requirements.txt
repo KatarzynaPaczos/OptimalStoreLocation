@@ -8,6 +8,7 @@ shapely
 vulture
 ruff
 fastparquet
+pytest
 
 snowflake-connector-python[pandas]
 snowflake-sqlalchemy

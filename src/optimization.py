@@ -55,7 +55,7 @@ def find_best_location(housing: pd.DataFrame, store_locations: pd.DataFrame, n=5
         for iter in new_locations_xy:
             cust_prox, store_prox, ratio = evaluate_score(iter, tree_residents, tree_store,
                                                         residents_xy, residents_n, stores_xy)
-            score = cust_prox + store_prox + ratio
+            score = float(1+ cust_prox + store_prox + ratio)
             scores_detailed.append([cust_prox, store_prox, ratio, score, iteration_global+1])
 
     new_locations_latlon = _xy_to_latlon(new_locations_all, ref_lat)
